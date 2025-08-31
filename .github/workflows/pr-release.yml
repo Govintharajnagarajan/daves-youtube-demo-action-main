@@ -43,7 +43,7 @@ jobs:
         id: create_tag
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: "release-${{ env.date }}-${{ github.run_number }}"
+          tag_name: ''
           name: "Release ${{ github.event.pull_request.title }}"
           body: |
             **Pull Request Title:** ${{ env.pr_title }}
