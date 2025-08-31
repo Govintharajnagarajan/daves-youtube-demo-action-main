@@ -1,0 +1,49 @@
+name: Release from Merged PR
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  create_release:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch all commit messages
+        id: fetch_commits
+        run: |
+          COMMITS=$(git log --format=%B --no-merges --reverse ${{ github.event.pull_request.head.sha }}...${{ github.event.pull_request.base.sha }})
+          echo "commit_messages<<EOF" >> $GITHUB_ENV
+          echo "$COMMITS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Get PR title
+        id: get_pr_title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "pr_title=$PR_TITLE" >> $GITHUB_ENV
+
+      - name: Get current date and time
+        id: get_date
+        run: echo "date=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+
+      - name: Create release tag
+        id: create_tag
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "release-${{ env.date }}-${{ github.run_number }}"
+          name: "Release ${{ github.event.pull_request.title }}"
+          body: |
+            **Pull Request Title:** ${{ env.pr_title }}
+
+            **Commit Messages:**
+            ${{ env.commit_messages }}
