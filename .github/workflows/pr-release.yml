@@ -17,25 +17,28 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          # This is crucial: Fetch the full history to make git log work correctly.
+          fetch-depth: 0 
 
       - name: Fetch all commit messages
         id: fetch_commits
         run: |
-          COMMITS=$(git log --format=%B --no-merges --reverse ${{ github.event.pull_request.head.sha }}...${{ github.event.pull_request.base.sha }})
+          COMMITS=$(git log --format=%B --no-merges --reverse ${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }})
           echo "commit_messages<<EOF" >> $GITHUB_ENV
           echo "$COMMITS" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
-
+      
       - name: Get PR title
         id: get_pr_title
         run: |
           PR_TITLE="${{ github.event.pull_request.title }}"
           echo "pr_title=$PR_TITLE" >> $GITHUB_ENV
-
+      
       - name: Get current date and time
         id: get_date
         run: echo "date=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
-
+      
       - name: Create release tag
         id: create_tag
         uses: softprops/action-gh-release@v1
